@@ -904,80 +904,251 @@ module.exports.createWithdraw = async (req, res, next) => {
             user,
             amount,
             method,
-            name,
-            phone,
+
+            // Bank Details
+            account_name,
+            account_number,
+            bank_name,
+            country,
+            currency,
+            routing_number,
+            sort_code,
+            iban,
+            swift,
+            bic,
+            transit_number,
+            institution_number,
+            bsb,
+            bank_branch,
+            bank_address,
+
+            // Crypto / Others
             bitcoin_address,
             etherium_address,
             zelle_address,
             cashapp_address,
-            bank_name,
-            account_number,
-            account_name,
-            swift
+
+            // Optional
+            phone,
+            name
         } = req.body;
 
-        // Validate required fields
-        if (!user?.email || !amount || !method) {
-            return res.status(400).json({ response: 'Missing required fields' });
+        // ==========================
+        // Basic Validation
+        // ==========================
+
+        if (!user?.email) {
+            return res.status(400).json({
+                response: "User is required."
+            });
         }
 
-        // Check if user exists
-        const foundUser = await User.findOne({ email: user.email });
+        if (!amount) {
+            return res.status(400).json({
+                response: "Withdrawal amount is required."
+            });
+        }
+
+        if (!method) {
+            return res.status(400).json({
+                response: "Withdrawal method is required."
+            });
+        }
+
+        // ==========================
+        // Find User
+        // ==========================
+
+        const foundUser = await User.findOne({
+            email: user.email
+        });
+
         if (!foundUser) {
-            return res.status(404).json({ response: 'No user found' });
+            return res.status(404).json({
+                response: "User not found."
+            });
         }
 
-        // Create withdrawal
+        // ==========================
+        // Validate According to Method
+        // ==========================
+
+        if (method.toLowerCase() === "bank") {
+
+            if (!account_name)
+                return res.status(400).json({
+                    response: "Account holder name is required."
+                });
+
+            if (!bank_name)
+                return res.status(400).json({
+                    response: "Bank name is required."
+                });
+
+            if (!account_number)
+                return res.status(400).json({
+                    response: "Account number is required."
+                });
+
+            if (!country)
+                return res.status(400).json({
+                    response: "Country is required."
+                });
+
+            if (!currency)
+                return res.status(400).json({
+                    response: "Currency is required."
+                });
+        }
+
+        if (method.toLowerCase() === "bitcoin" && !bitcoin_address) {
+            return res.status(400).json({
+                response: "Bitcoin address is required."
+            });
+        }
+
+        if (method.toLowerCase() === "etherium" && !etherium_address) {
+            return res.status(400).json({
+                response: "Ethereum address is required."
+            });
+        }
+
+        if (method.toLowerCase() === "cashapp" && !cashapp_address) {
+            return res.status(400).json({
+                response: "CashApp username is required."
+            });
+        }
+
+        if (method.toLowerCase() === "zelle" && !zelle_address) {
+            return res.status(400).json({
+                response: "Zelle email or phone is required."
+            });
+        }
+
+        // ==========================
+        // Create Withdrawal
+        // ==========================
+
         const newWithdraw = new Withdraw({
             _id: new mongoose.Types.ObjectId(),
-            status: 'Pending',
+
+            status: "Pending",
+
             withdrawId: `WTH-${Date.now()}`,
+
             amount: String(amount),
+
             method: method.toLowerCase(),
+
+            date: new Date().toISOString(),
+
+            // Bank
+            account_name,
+            account_number,
+            bank_name,
+            country,
+            currency,
+            routing_number,
+            sort_code,
+            iban,
+            swift,
+            bic,
+            transit_number,
+            institution_number,
+            bsb,
+            bank_branch,
+            bank_address,
+
+            // Crypto
             bitcoin_address,
             etherium_address,
-            zelle_address,
             cashapp_address,
-            bank_name,
-            account_number,
-            account_name,
-            swift,
+            zelle_address,
+
+            // Optional
             phone,
             name,
-            date: new Date().toISOString(),
+
             user: foundUser._id
         });
 
         await newWithdraw.save();
 
-        // Send email notification
+        // ==========================
+        // Email
+        // ==========================
+
         await resend.emails.send({
-            from: 'digitalprimenetworking.com',
+            from: "digitalprimenetworking.com",
             to: foundUser.email,
-            subject: 'Withdrawal Request Received – cofc-wsb',
+            subject: "Withdrawal Request Received – cofc-wsb",
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background-color: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <h2 style="color: #222;">Withdrawal Request Submitted</h2>
+                <div style="font-family:Arial,sans-serif;padding:30px;max-width:650px;margin:auto;">
+                    <h2>Withdrawal Request Received</h2>
+
                     <p>Hello ${foundUser.firstName || foundUser.email},</p>
-                    <p>Your withdrawal request has been received and is currently pending review.</p>
-                    <p><strong>Amount:</strong> ${amount}</p>
-                    <p><strong>Method:</strong> ${method}</p>
-                    <p><strong>Status:</strong> Pending</p>
-                    <p>We’ll notify you once your request is processed.</p>
-                    <p style="margin-top: 30px;">Thank you for using <strong>cofc-wsb</strong>.</p>
+
+                    <p>Your withdrawal request has been submitted successfully.</p>
+
+                    <table style="width:100%;border-collapse:collapse;">
+                        <tr>
+                            <td><strong>Withdrawal ID</strong></td>
+                            <td>${newWithdraw.withdrawId}</td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Amount</strong></td>
+                            <td>${amount}</td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Method</strong></td>
+                            <td>${method}</td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Status</strong></td>
+                            <td>Pending</td>
+                        </tr>
+                    </table>
+
+                    <br>
+
+                    <p>
+                        Our finance team will review your request and notify
+                        you once it has been processed.
+                    </p>
+
+                    <p>
+                        Thank you for choosing <strong>cofc-wsb</strong>.
+                    </p>
                 </div>
             `
         });
 
-        // Fetch all withdrawals for the user
-        const userWithdrawals = await Withdraw.find({ user: foundUser._id }).sort({ date: -1 });
+        // ==========================
+        // Return Updated History
+        // ==========================
+
+        const userWithdrawals = await Withdraw.find({
+            user: foundUser._id
+        }).sort({
+            createdAt: -1
+        });
 
         return res.status(200).json({
             response: userWithdrawals
         });
 
     } catch (error) {
-        return next(new Error(error.message || 'An error occurred, try again later.'));
+
+        return next(
+            new Error(
+                error.message ||
+                "An error occurred while processing your withdrawal."
+            )
+        );
+
     }
 };
 

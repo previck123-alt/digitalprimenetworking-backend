@@ -277,57 +277,137 @@ const TradeSchema = new mongoose.Schema({
 
 const withdrawSchema = new mongoose.Schema({
     _id: mongoose.Types.ObjectId,
+
     status: {
-        type: String
+        type: String,
+        default: "Pending"
     },
-    bitcoin_address: {
-        type: String
-    },
-    zelle_address: {
-        type: String
-    },
-    etherium_address: {
-        type: String
-    },
-    cashapp_address: {
-        type: String
-    },
+
     withdrawId: {
         type: String
     },
+
     amount: {
-        type: String
+        type: String,
+        required: true
     },
+
     method: {
-        type: String
+        type: String,
+        enum: ["bank", "bitcoin", "etherium", "cashapp", "zelle"],
+        required: true
     },
+
     date: {
         type: String
     },
-    swift: {
+
+    // ==========================
+    // BANK WITHDRAWAL
+    // ==========================
+
+    country: {
         type: String
     },
-    bank_name: {
+
+    currency: {
         type: String
     },
-    account_number: {
-        type: String
-    },
+
     account_name: {
         type: String
     },
+
+    bank_name: {
+        type: String
+    },
+
+    account_number: {
+        type: String
+    },
+
+    routing_number: {
+        type: String
+    }, // USA
+
+    sort_code: {
+        type: String
+    }, // UK
+
+    iban: {
+        type: String
+    }, // Europe
+
+    swift: {
+        type: String
+    }, // International
+
+    bic: {
+        type: String
+    }, // Europe
+
+    transit_number: {
+        type: String
+    }, // Canada
+
+    institution_number: {
+        type: String
+    }, // Canada
+
+    bsb: {
+        type: String
+    }, // Australia
+
+    bank_branch: {
+        type: String
+    },
+
+    bank_address: {
+        type: String
+    },
+
+    // ==========================
+    // CRYPTO / OTHER METHODS
+    // ==========================
+
+    bitcoin_address: {
+        type: String
+    },
+
+    etherium_address: {
+        type: String
+    },
+
+    cashapp_address: {
+        type: String
+    },
+
+    zelle_address: {
+        type: String
+    },
+
+    // ==========================
+    // OPTIONAL CONTACT INFO
+    // ==========================
+
     phone: {
         type: String
     },
+
     name: {
         type: String
     },
 
+    // ==========================
+    // USER
+    // ==========================
+
     user: {
         type: mongoose.Types.ObjectId,
-        ref: "User"
-    },
-})
+        ref: "User",
+        required: true
+    }
+});
 
 //package schema
 const PackageSchema = new mongoose.Schema({
