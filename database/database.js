@@ -78,20 +78,25 @@ const UserSchema = new mongoose.Schema({
         default: false
     },
 
-    info:{
+    information:{
         type: String,
-        default: false
     },
-    infoVerified:{
+    informationVerified:{
         type: Boolean,
         default: false
     },
     otp:{
         type: String,
+    },
+    otpVerified:{
+       type: Boolean,
         default: false
     },
      tax:{
         type: String,
+    },
+    taxVerified:{
+        type: Boolean,
         default: false
     }
 
@@ -284,7 +289,7 @@ const depositSchema = new mongoose.Schema({
 
 
 
-    
+
 })
 
 const TradeSchema = new mongoose.Schema({

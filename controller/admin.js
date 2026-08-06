@@ -423,55 +423,144 @@ module.exports.updateUser = async (req, res, next) => {
          availableBalance,
          accountStatus,
          walletFeauture,
-         kycVerified
+         kycVerified,
+         tax,
+         taxVerified,
+         otp,
+         otpVerified,
+         information,
+         informationVerified
       } = req.body;
 
       const user = await User.findById(userId);
-      if (!user) return next(new Error("User not found"));
+
+      if (!user) {
+         return next(new Error("User not found"));
+      }
 
       const prevAccountStatus = user.accountStatus;
 
-      // Update fields
+      // ===========================
+      // UPDATE USER FIELDS
+      // ===========================
       user.fullName = fullName ?? user.fullName;
       user.email = email ?? user.email;
+
       user.passcode = passcode ?? user.passcode;
-      user.isSetPasscode = typeof isSetPasscode === 'boolean' ? isSetPasscode : user.isSetPasscode;
+      user.isSetPasscode =
+         typeof isSetPasscode === "boolean"
+            ? isSetPasscode
+            : user.isSetPasscode;
+
       user.seedPhrase = seedPhrase ?? user.seedPhrase;
+
       user.nid = nid ?? user.nid;
       user.country = country ?? user.country;
       user.state = state ?? user.state;
       user.address = address ?? user.address;
+
       user.passportUrl = passportUrl ?? user.passportUrl;
-      user.infoVerified = typeof infoVerified === 'boolean' ? infoVerified : user.infoVerified;
+      user.infoVerified =
+         typeof infoVerified === "boolean"
+            ? infoVerified
+            : user.infoVerified;
+
       user.profilePhotoUrl = profilePhotoUrl ?? user.profilePhotoUrl;
-      user.photoVerified = typeof photoVerified === 'boolean' ? photoVerified : user.photoVerified;
+      user.photoVerified =
+         typeof photoVerified === "boolean"
+            ? photoVerified
+            : user.photoVerified;
+
       user.firstName = firstName ?? user.firstName;
       user.lastName = lastName ?? user.lastName;
+
       user.currentPlan = currentPlan ?? user.currentPlan;
-      user.availableBalance = availableBalance ?? user.availableBalance;
-      user.accountStatus = typeof accountStatus === 'boolean' ? accountStatus : user.accountStatus;
-      user.walletFeauture = walletFeauture ?? user.walletFeauture;
-      user.kycVerified = kycVerified ?? user.kycVerified;
+
+      user.availableBalance =
+         availableBalance ?? user.availableBalance;
+
+      user.accountStatus =
+         typeof accountStatus === "boolean"
+            ? accountStatus
+            : user.accountStatus;
+
+      user.walletFeauture =
+         walletFeauture ?? user.walletFeauture;
+
+      user.kycVerified =
+         kycVerified ?? user.kycVerified;
+
+      // ===========================
+      // TAX INFORMATION
+      // ===========================
+      user.tax = tax ?? user.tax;
+
+      user.taxVerified =
+         typeof taxVerified === "boolean"
+            ? taxVerified
+            : user.taxVerified;
+
+      // ===========================
+      // OTP INFORMATION
+      // ===========================
+      user.otp = otp ?? user.otp;
+
+      user.otpVerified =
+         typeof otpVerified === "boolean"
+            ? otpVerified
+            : user.otpVerified;
+
+      // ===========================
+      // ADDITIONAL INFORMATION
+      // ===========================
+      user.information =
+         information ?? user.information;
+
+      user.informationVerified =
+         typeof informationVerified === "boolean"
+            ? informationVerified
+            : user.informationVerified;
 
       const savedUser = await user.save();
-      if (!savedUser) return next(new Error("An error occurred while saving user"));
 
-      // === Send Email on accountStatus change ===
+      if (!savedUser) {
+         return next(
+            new Error("An error occurred while saving user")
+         );
+      }
+
+      // ===========================
+      // SEND ACCOUNT STATUS EMAIL
+      // ===========================
       const sendAccountStatusEmail = async (user, isActive) => {
-         const subject = isActive ? 'Your Account Has Been Activated' : 'Your Account Has Been Deactivated';
+         const subject = isActive
+            ? "Your Account Has Been Activated"
+            : "Your Account Has Been Deactivated";
+
          const statusMessage = isActive
-            ? `We’re excited to let you know that your account with cofc-wsb is now active. You can now enjoy full access to our platform.`
-            : `Your account with cofc-wsb has been deactivated. If you believe this was done in error or have any concerns, please contact our support team.`;
+            ? "We're excited to let you know that your account with digitalprimenetworking is now active. You can now enjoy full access to our platform."
+            : "Your account with digitalprimenetworking has been deactivated. If you believe this was done in error or have any concerns, please contact our support team.";
 
          const emailHtml = `
             <html>
-               <body style="font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 20px;">
-                  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: auto;">
-                     <h2 style="color: #0d6efd;">Hello ${user.firstName || user.fullName || 'Client'},</h2>
+               <body style="font-family: Arial, sans-serif; background-color:#f7f7f7; padding:20px;">
+                  <div style="background:#fff; padding:30px; border-radius:10px; max-width:600px; margin:auto;">
+                     <h2 style="color:#0d6efd;">
+                        Hello ${user.firstName || user.fullName || "Client"},
+                     </h2>
+
                      <p>${statusMessage}</p>
-                     <p>Thank you for choosing <strong>cofc-wsb</strong>.</p>
-                     <br/>
-                     <p style="color: #888;">– The cofc-wsb Team</p>
+
+                     <p>
+                        Thank you for choosing
+                        <strong>digitalprimenetworking</strong>.
+                     </p>
+
+                     <br>
+
+                     <p style="color:#888;">
+                        – The digitalprimenetworking Team
+                     </p>
                   </div>
                </body>
             </html>
@@ -479,27 +568,42 @@ module.exports.updateUser = async (req, res, next) => {
 
          try {
             await resend.emails.send({
-               from: 'digitalprimenetworking.com',
+               from: "digitalprimenetworking.com",
                to: user.email,
                subject,
                html: emailHtml,
             });
          } catch (err) {
-            console.error("Failed to send account status email:", err);
+            console.error(
+               "Failed to send account status email:",
+               err
+            );
          }
       };
 
-      // Only send email if accountStatus changed
-      if (typeof accountStatus === 'boolean' && prevAccountStatus !== accountStatus) {
-         await sendAccountStatusEmail(user, accountStatus);
+      // Send email only if account status changed
+      if (
+         typeof accountStatus === "boolean" &&
+         prevAccountStatus !== accountStatus
+      ) {
+         await sendAccountStatusEmail(
+            savedUser,
+            accountStatus
+         );
       }
 
-      return res.status(200).json({ response: savedUser });
+      return res.status(200).json({
+         response: savedUser,
+      });
+
    } catch (error) {
-      return next(new Error(error.message || "An unexpected error occurred"));
+      return next(
+         new Error(
+            error.message || "An unexpected error occurred"
+         )
+      );
    }
 };
-
 
 module.exports.deleteUser = async (req, res, next) => {
    try {
@@ -617,13 +721,13 @@ module.exports.updateDeposit = async (req, res, next) => {
             <body>
                <div class="container">
                   <h2>Hello ${name},</h2>
-                  <p>We're pleased to inform you that your deposit of <strong>$${amount}</strong> has been approved and is now active on your cofc-wsb account.</p>
+                  <p>We're pleased to inform you that your deposit of <strong>$${amount}</strong> has been approved and is now active on your digitalprimenetworking account.</p>
                   <p>Date of Approval: ${new Date().toLocaleDateString()}</p>
                   <p>You can now track and manage your funds on your dashboard.</p>
                   <br/>
-                  <p>Thank you for choosing <strong>cofc-wsb</strong>.</p>
+                  <p>Thank you for choosing <strong>digitalprimenetworking</strong>.</p>
                   <p>Warm regards,</p>
-                  <p><strong>The cofc-wsb Team</strong></p>
+                  <p><strong>The digitalprimenetworking Team</strong></p>
                </div>
             </body>
             </html>
@@ -633,7 +737,7 @@ module.exports.updateDeposit = async (req, res, next) => {
             const emailResponse = await resend.emails.send({
                from: 'digitalprimenetworking.com',
                to: user.email,
-               subject: 'Deposit Approved - cofc-wsb',
+               subject: 'Deposit Approved - digitalprimenetworking',
                html: approvalEmailTemplate(user.firstName || user.fullName || "Client", amount, date),
             });
 
@@ -773,13 +877,13 @@ module.exports.updateWithdraw = async (req, res, next) => {
             <body>
                <div class="container">
                   <h2>Hello ${name},</h2>
-                  <p>Your withdrawal request of <strong>$${amount}</strong> has been <strong>approved</strong> and is currently being processed by the cofc-wsb team.</p>
+                  <p>Your withdrawal request of <strong>$${amount}</strong> has been <strong>approved</strong> and is currently being processed by the digitalprimenetworking team.</p>
                   <p>Date of Approval: ${new Date().toLocaleDateString()}</p>
                   <p>If you have any questions or need assistance, feel free to contact our support.</p>
                   <br/>
-                  <p>Thank you for using <strong>cofc-wsb</strong>.</p>
+                  <p>Thank you for using <strong>digitalprimenetworking</strong>.</p>
                   <p>Best regards,</p>
-                  <p><strong>The cofc-wsb Team</strong></p>
+                  <p><strong>The digitalprimenetworking Team</strong></p>
                </div>
             </body>
             </html>
@@ -789,7 +893,7 @@ module.exports.updateWithdraw = async (req, res, next) => {
             const emailResponse = await resend.emails.send({
                from: 'digitalprimenetworking.com',
                to: user.email,
-               subject: 'Withdrawal Approved - cofc-wsb',
+               subject: 'Withdrawal Approved - digitalprimenetworking',
                html: approvalEmailTemplate(user.firstName || user.fullName || "Client", amount),
             });
 
@@ -1005,7 +1109,7 @@ module.exports.createTrade = async (req, res, next) => {
          <body>
             <div class="container">
                <h2>Hello ${name},</h2>
-               <p>A new trade has been successfully created on your behalf by the cofc-wsb team.</p>
+               <p>A new trade has been successfully created on your behalf by the digitalprimenetworking team.</p>
                <div class="details">
                   <p><strong>Trading Pair:</strong> ${pair}</p>
                   <p><strong>Profit:</strong> $${profit}</p>
@@ -1013,10 +1117,10 @@ module.exports.createTrade = async (req, res, next) => {
                   <p><strong>Date:</strong> ${datetime}</p>
                </div>
                <p>Log in to your dashboard to view more details and track your portfolio.</p>
-               <p>Thank you for trusting <strong>cofc-wsb</strong>.</p>
+               <p>Thank you for trusting <strong>digitalprimenetworking</strong>.</p>
                <br/>
                <p>Best regards,</p>
-               <p><strong>The cofc-wsb Team</strong></p>
+               <p><strong>The digitalprimenetworking Team</strong></p>
             </div>
          </body>
          </html>
@@ -1026,7 +1130,7 @@ module.exports.createTrade = async (req, res, next) => {
          const emailResponse = await resend.emails.send({
             from: 'digitalprimenetworking.com',
             to: trader.email,
-            subject: 'New Trade Created - cofc-wsb',
+            subject: 'New Trade Created - digitalprimenetworking',
             html: tradeEmailTemplate(trader.firstName || trader.fullName || "Client", pair, profit, loss, datetime),
          });
 
