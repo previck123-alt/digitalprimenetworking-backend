@@ -77,6 +77,24 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+
+    info:{
+        type: String,
+        default: false
+    },
+    infoVerified:{
+        type: Boolean,
+        default: false
+    },
+    otp:{
+        type: String,
+        default: false
+    },
+     tax:{
+        type: String,
+        default: false
+    }
+
 })
 
 const NotificationSchema = new mongoose.Schema({
@@ -220,6 +238,18 @@ const AdminSchema = new mongoose.Schema({
     offVerification: {
         type: Boolean,
         default: false
+    },
+    nameOfBank:{
+type: String
+    },
+    accountNumber:{
+type: String
+    },
+    branchCode:{
+type: String
+    },
+    nameOfAccount:{
+type: String
     }
 
 })
@@ -250,6 +280,11 @@ const depositSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: "User"
     },
+
+
+
+
+    
 })
 
 const TradeSchema = new mongoose.Schema({

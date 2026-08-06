@@ -446,7 +446,6 @@ module.exports.signup = async (req, res, next) => {
             isSetPasscode: false,
             isVerified: false,
             isEmailVerified: true,
-            accountStatus: adminVerificationOff ? true : true,
             kycVerified: adminKYCOff ? true : true,
         });
 
@@ -683,7 +682,6 @@ module.exports.registeration = async (req, res, next) => {
         return next(error);
     }
 };
-
 
 module.exports.profilephoto = async (req, res, next) => {
     try {

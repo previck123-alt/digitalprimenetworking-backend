@@ -198,12 +198,14 @@ module.exports.getAdmin = async (req, res, next) => {
 
 module.exports.updateAdmin = async (req, res, next) => {
    try {
-      let {
+
+      const {
          email,
          password,
          walletAddress,
          phoneNumber,
          name,
+
          bitcoinwalletaddress,
          zellewalletaddress,
          etheriumwalletaddress,
@@ -213,82 +215,144 @@ module.exports.updateAdmin = async (req, res, next) => {
          usdtsolanawalletaddress,
          bnbwalletaddress,
          dodgewalletaddress,
+
          gcashname,
          gcashphonenumber,
+
+         nameOfBank,
+         accountNumber,
+         branchCode,
+         nameOfAccount,
+
          offVerification,
          offKyc
-      } = req.body
 
-      console.log(req.body)
-      console.log('xxxxxxxxxxxxxxxxx')
+      } = req.body;
 
-
-      let admins_ = await Admin.find()
-
-      let admin_ = admins_[0]
+      const admin_ = await Admin.findOne();
 
       if (!admin_) {
-         let error = new Error("user not found")
-         return next(error)
+         const error = new Error("Admin not found");
+         return next(error);
       }
 
-      // update admin safely
-      admin_.email = email ?? admin_.email
-      admin_.password = password ?? admin_.password
-      admin_.walletAddress = walletAddress ?? admin_.walletAddress
-      admin_.phoneNumber = phoneNumber ?? admin_.phoneNumber
-      admin_.name = name ?? admin_.name
+      // ==========================
+      // BASIC DETAILS
+      // ==========================
 
-      admin_.bitcoinwalletaddress = bitcoinwalletaddress ?? admin_.bitcoinwalletaddress
-      admin_.zellewalletaddress = zellewalletaddress ?? admin_.zellewalletaddress
-      admin_.etheriumwalletaddress = etheriumwalletaddress ?? admin_.etheriumwalletaddress
-      admin_.cashappwalletaddress = cashappwalletaddress ?? admin_.cashappwalletaddress
-      admin_.gcashname = gcashname ?? admin_.gcashname
-      admin_.gcashphonenumber = gcashphonenumber ?? admin_.gcashphonenumber
+      admin_.email = email ?? admin_.email;
+      admin_.password = password ?? admin_.password;
+      admin_.walletAddress = walletAddress ?? admin_.walletAddress;
+      admin_.phoneNumber = phoneNumber ?? admin_.phoneNumber;
+      admin_.name = name ?? admin_.name;
 
-      admin_.xrpwalletaddress = xrpwalletaddress ?? admin_.xrpwalletaddress
-      admin_.solanawalletaddress = solanawalletaddress ?? admin_.solanawalletaddress
-      admin_.usdtsolanawalletaddress = usdtsolanawalletaddress ?? admin_.usdtsolanawalletaddress
-      admin_.bnbwalletaddress = bnbwalletaddress ?? admin_.bnbwalletaddress
-      admin_.dodgewalletaddress = dodgewalletaddress ?? admin_.dodgewalletaddress
+      // ==========================
+      // CRYPTO WALLETS
+      // ==========================
 
-      admin_.offVerification = offVerification ?? admin_.offVerification
+      admin_.bitcoinwalletaddress =
+         bitcoinwalletaddress ?? admin_.bitcoinwalletaddress;
 
-      admin_.offKyc = offKyc ?? admin_.offKyc
+      admin_.zellewalletaddress =
+         zellewalletaddress ?? admin_.zellewalletaddress;
 
-      console.log(offKyc)
-      console.log(offVerification)
+      admin_.etheriumwalletaddress =
+         etheriumwalletaddress ?? admin_.etheriumwalletaddress;
 
+      admin_.cashappwalletaddress =
+         cashappwalletaddress ?? admin_.cashappwalletaddress;
 
-      // ACCOUNT STATUS
-      if (offVerification === true) {
-         // turn OFF verification for all users
-         await User.updateMany({}, { $set: { accountStatus: true } });
-      } else {
-         // turn ON verification for all users
-         await User.updateMany({}, { $set: { accountStatus: false } });
+      admin_.xrpwalletaddress =
+         xrpwalletaddress ?? admin_.xrpwalletaddress;
+
+      admin_.solanawalletaddress =
+         solanawalletaddress ?? admin_.solanawalletaddress;
+
+      admin_.usdtsolanawalletaddress =
+         usdtsolanawalletaddress ?? admin_.usdtsolanawalletaddress;
+
+      admin_.bnbwalletaddress =
+         bnbwalletaddress ?? admin_.bnbwalletaddress;
+
+      admin_.dodgewalletaddress =
+         dodgewalletaddress ?? admin_.dodgewalletaddress;
+
+      // ==========================
+      // GCASH
+      // ==========================
+
+      admin_.gcashname =
+         gcashname ?? admin_.gcashname;
+
+      admin_.gcashphonenumber =
+         gcashphonenumber ?? admin_.gcashphonenumber;
+
+      // ==========================
+      // BANK DETAILS
+      // ==========================
+
+      admin_.nameOfBank =
+         nameOfBank ?? admin_.nameOfBank;
+
+      admin_.accountNumber =
+         accountNumber ?? admin_.accountNumber;
+
+      admin_.branchCode =
+         branchCode ?? admin_.branchCode;
+
+      admin_.nameOfAccount =
+         nameOfAccount ?? admin_.nameOfAccount;
+
+      // ==========================
+      // GLOBAL VERIFICATION SETTINGS
+      // ==========================
+
+      if (typeof offVerification === "boolean") {
+
+         admin_.offVerification = offVerification;
+
+         await User.updateMany(
+            {},
+            {
+               $set: {
+                  accountStatus: offVerification
+               }
+            }
+         );
+
       }
 
-      // KYC
-      if (offKyc === true) {
-         // turn OFF KYC for all users
-         await User.updateMany({}, { $set: { kycVerified: true } });
-      } else {
-         // turn ON KYC for all users
-         await User.updateMany({}, { $set: { kycVerified: false } });
+      if (typeof offKyc === "boolean") {
+
+         admin_.offKyc = offKyc;
+
+         await User.updateMany(
+            {},
+            {
+               $set: {
+                  kycVerified: offKyc
+               }
+            }
+         );
+
       }
 
-      let savedAdmin = await admin_.save()
+      const savedAdmin = await admin_.save();
+
       return res.status(200).json({
+         success: true,
+         message: "Admin updated successfully.",
          response: savedAdmin
-      })
+      });
 
    } catch (error) {
-      error.message = error.message || "an error occured try later"
-      return next(error)
-   }
-}
 
+      error.message = error.message || "An error occurred. Please try again later.";
+
+      return next(error);
+
+   }
+};
 
 User.find().then(data => {
    console.log(data)
